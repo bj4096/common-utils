@@ -1,6 +1,7 @@
 package com.sljl.core.utils;
 
 import com.google.common.collect.Lists;
+import com.sljl.core.enums.HttpContentTypeEnum;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -130,11 +132,12 @@ public class HttpClientUtil {
      *
      * @param url ： 请求URL
      * @param _paramMap ：Post请求参数
+     * @param _contentType ：请求头Content-Type
      *
      * @return
      */
-    public static String getResultByHttpPost(String url, Map<String, String> _paramMap) {
-        return getResultByHttpPost(url, _paramMap, null, null, DEFAULT_CHARSET);
+    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, HttpContentTypeEnum _contentType) {
+        return getResultByHttpPost(url, _paramMap, null, _contentType, DEFAULT_CHARSET);
     }
 
     /**
@@ -142,12 +145,13 @@ public class HttpClientUtil {
      *
      * @param url ： 请求URL
      * @param _paramMap ：Post请求参数
+     * @param _contentType ：请求头Content-Type
      * @param charset ：编码格式
      *
      * @return
      */
-    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, String charset) {
-        return getResultByHttpPost(url, _paramMap, null, null, charset);
+    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, HttpContentTypeEnum _contentType, String charset) {
+        return getResultByHttpPost(url, _paramMap, null, _contentType, charset);
     }
 
     /**
@@ -156,11 +160,13 @@ public class HttpClientUtil {
      * @param url ： 请求URL
      * @param _paramMap ：Post请求参数
      * @param _headerMap ：请求头信息
+     * @param _contentType ：请求头Content-Type
+     * @param _contentType ：请求头Content-Type
      *
      * @return
      */
-    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap) {
-        return getResultByHttpPost(url, _paramMap, _headerMap, null, DEFAULT_CHARSET);
+    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap, HttpContentTypeEnum _contentType) {
+        return getResultByHttpPost(url, _paramMap, _headerMap, null, _contentType, DEFAULT_CHARSET);
     }
 
     /**
@@ -169,12 +175,13 @@ public class HttpClientUtil {
      * @param url ： 请求URL
      * @param _paramMap ：Post请求参数
      * @param _headerMap ：请求头信息
+     * @param _contentType ：请求头Content-Type
      * @param charset ：编码格式
      *
      * @return
      */
-    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap, String charset) {
-        return getResultByHttpPost(url, _paramMap, _headerMap, null, charset);
+    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap, HttpContentTypeEnum _contentType, String charset) {
+        return getResultByHttpPost(url, _paramMap, _headerMap, null, _contentType, charset);
     }
 
     /**
@@ -184,14 +191,18 @@ public class HttpClientUtil {
      * @param _paramMap ：Post请求参数
      * @param _headerMap ：请求头信息
      * @param _httpProxy ：请求使用的代理信息
+     * @param _contentType ：请求头Content-Type
      * @param charset ：编码格式，默认UTF-8
      *
      * @return
      */
-    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap, HttpHost _httpProxy, String charset) {
+    public static String getResultByHttpPost(String url, Map<String, String> _paramMap, Map<String, String> _headerMap, HttpHost _httpProxy, HttpContentTypeEnum _contentType, String charset) {
         String responseText = "";
         HttpResponse httpResponse = null;
         try {
+            if (null == _contentType) {
+                _contentType = HttpContentTypeEnum.APPLICATION_X_WWW_FORM_URLENCODED;
+            }
             HttpPost httpPost = new HttpPost(url);
             RequestConfig requestConfig = null;
             if (null == _httpProxy) {
@@ -206,19 +217,24 @@ public class HttpClientUtil {
                     httpPost.addHeader(headKey, _headerMap.get(headKey));
                 }
             }
-            List<NameValuePair> params = Lists.newArrayList();
-            if (null != _paramMap) {
-                for (String key : _paramMap.keySet()) {
-                    params.add(new BasicNameValuePair(key, _paramMap.get(key)));
+            httpPost.addHeader("Content-Type", _contentType.getContentType());
+            if (HttpContentTypeEnum.APPLICATION_JSON == _contentType) {
+                httpPost.setEntity(new StringEntity(JsonUtil.toJson(_paramMap), charset));
+            } else {
+                List<NameValuePair> params = Lists.newArrayList();
+                if (null != _paramMap) {
+                    for (String key : _paramMap.keySet()) {
+                        params.add(new BasicNameValuePair(key, _paramMap.get(key)));
+                    }
                 }
+                httpPost.setEntity(new UrlEncodedFormEntity(params, charset));
             }
-            httpPost.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
             httpResponse = httpClient.execute(httpPost);
             int statusCode = httpResponse.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
-                responseText = EntityUtils.toString(httpResponse.getEntity(), "utf-8");
+                responseText = EntityUtils.toString(httpResponse.getEntity(), charset);
             } else {
-                throw new Exception("HTTP STATUS CODE：" + statusCode + "\n" + EntityUtils.toString(httpResponse.getEntity(), "utf-8"));
+                throw new Exception("HTTP STATUS CODE：" + statusCode + "\n" + EntityUtils.toString(httpResponse.getEntity(), charset));
             }
         } catch (Exception e) {
             e.printStackTrace();
