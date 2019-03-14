@@ -1,7 +1,7 @@
 package com.sljl.core.utils;
 
-import com.xfs.core.enums.ConstellationTypeEnum;
-import com.xfs.core.enums.ZodiacTypeEnum;
+import com.sljl.core.enums.ConstellationTypeEnum;
+import com.sljl.core.enums.ZodiacTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.ParseException;
@@ -176,7 +176,7 @@ public class TimeUtil {
      * dayOfWeek==0时，返回指定日期所在周的周一日期，在此基础上获取当前周，上周，下周任意的周几对应的日期
      *
      * @param dateTime：指定日期
-     * @param dayOfWeek：指定日期所在周周一的基础上加几天或者减几天的日期
+     * @param addDayOfWeek：指定日期所在周周一的基础上加几天或者减几天的日期
      *
      * @return
      */
