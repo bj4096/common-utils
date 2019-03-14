@@ -1,4 +1,4 @@
-package com.sljl.core.utils;
+package com.sljl.core.utils.encrypt;
 
 /**
  * 数字混淆工具

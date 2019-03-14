@@ -1,7 +1,7 @@
-package com.sljl.core.utils;
+package com.sljl.core.utils.encrypt;
 
 /**
- * 维尼吉亚加解密
+ * 维吉尼亚加解密
  *
  * @author L.Y.F
  */
