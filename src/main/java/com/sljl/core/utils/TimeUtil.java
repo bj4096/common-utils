@@ -113,19 +113,21 @@ public class TimeUtil {
     }
 
     /**
-     * 获取以当前时间为基准的前后N天的日期
+     * 获取以指定时间为基准的前后N天的日期
      *
+     * @param date： 指定日期
      * @param days：days > 0 = 未来时间、days < 0 = 历史时间、days == 0 = 当前时间
-     * @param format：结果日期的format
      *
      * @return
      */
-    public static String dateForBeforeOrAfter(int days, String format) {
-        SimpleDateFormat sdf = new SimpleDateFormat(format);
+    public static Date dateForBeforeOrAfter(Date date, int days) {
         // 使用默认时区和语言环境获得一个日历。
         Calendar cal = Calendar.getInstance();
+        if (null != date) {
+            cal.setTime(date);
+        }
         cal.add(Calendar.DAY_OF_YEAR, +days);
-        return sdf.format(cal.getTime());
+        return cal.getTime();
     }
 
     /**
@@ -173,26 +175,37 @@ public class TimeUtil {
     }
 
     /**
-     * dayOfWeek==0时，返回指定日期所在周的周一日期，在此基础上获取当前周，上周，下周任意的周几对应的日期
+     * 当dayOfWeek==0时，获取指定日期所在周的周一对应的日期；
+     * 在此基础上通过addDayOfWeek参数来灵活获取相关周的任意周几的日期；
+     * 其思路就是先拿到指定日期所在周的周一对应日期，然后通过增减天数来获取上周，本周甚至任意周的任意周几日期；
+     * 例如：
+     * <pre>
+     *     1. 获取当前日期所在周的周一日期：getDayOfWeekForDate(new Date(), 0);
+     *     2. 获取当前日期所在周的周三日期；getDayOfWeekForDate(new Date(), 2);
+     *     3. 获取当前日期所在周的周日日期；getDayOfWeekForDate(new Date(), 6);
+     *     4. 获取当前日期的前一周的周一日期：getDayOfWeekForDate(new Date(), -7);
+     *     5. 获取当前日期的前一周的周日日期：getDayOfWeekForDate(new Date(), -1);
+     *     6. 获取当前日期的未来一周的周一日期：getDayOfWeekForDate(new Date(), 7);
+     * </pre>
      *
-     * @param dateTime：指定日期
+     * @param date：指定日期
      * @param addDayOfWeek：指定日期所在周周一的基础上加几天或者减几天的日期
      *
      * @return
      */
-    public static long getWeekForDate(Date dateTime, int addDayOfWeek) {
+    public static Date getDayOfWeekForDate(Date date, int addDayOfWeek) {
         Calendar cal = new GregorianCalendar();
-        cal.setTime(dateTime);
-        // 判断要计算的日期是否是周日，如果是则减一天计算周六的，否则会出问题，计算到下一周去了  
+        cal.setTime(date);
+        // 判断要计算的日期是否是周日，如果是则减一天计算周六的，否则会出问题，计算到下一周去了
         int dayWeek = cal.get(Calendar.DAY_OF_WEEK);// 获得当前日期是一个星期的第几天
         if (1 == dayWeek) {
             cal.add(Calendar.DAY_OF_MONTH, -1);
         }
-        cal.setFirstDayOfWeek(Calendar.MONDAY);// 设置一个星期的第一天，按中国的习惯一个星期的第一天是星期一  
+        cal.setFirstDayOfWeek(Calendar.MONDAY);// 设置一个星期的第一天，按中国的习惯一个星期的第一天是星期一
         int day = cal.get(Calendar.DAY_OF_WEEK);// 获得当前日期是一个星期的第几天
-        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - day);// 根据日历的规则，给当前日期减去星期几与一个星期第一天的差值  
+        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - day);// 根据日历的规则，给当前日期减去星期几与一个星期第一天的差值
         cal.add(Calendar.DATE, addDayOfWeek);
-        return cal.getTime().getTime();
+        return cal.getTime();
     }
 
     /**
@@ -407,6 +420,48 @@ public class TimeUtil {
      */
     public static long calculateTwoDayDifferences(Date date, Date otherDate) {
         return (date.getTime() - otherDate.getTime()) / (DAY * 1000);
+    }
+
+    /**
+     * 获取指定日期所在月的第一天
+     *
+     * @return
+     */
+    public static Date getMonthFirstDay(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+        return cal.getTime();
+    }
+
+    /**
+     * 获取指定日期所在月的最后一天
+     *
+     * @return
+     */
+    public static Date getMonthLastDay(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        return cal.getTime();
+    }
+
+    /**
+     * 返回当前日期是周几
+     *
+     * @param date
+     * @return int
+     */
+    public static int getDayOfWeek(Date date) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int dayForWeek = 0;
+        if (c.get(Calendar.DAY_OF_WEEK) == 1) {
+            dayForWeek = 7;
+        } else {
+            dayForWeek = c.get(Calendar.DAY_OF_WEEK) - 1;
+        }
+        return dayForWeek;
     }
 
     public static void main(String[] args) throws ParseException {
